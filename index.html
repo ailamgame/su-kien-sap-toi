@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RemindMe | Trợ Lý Sự Kiện</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-body: #e0eafc; 
+            --bg-body-end: #cfdef3; 
+            --card-bg: rgba(255, 255, 255, 0.65); 
+            --card-border: rgba(255, 255, 255, 0.8);
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --accent-start: #6a11cb;
+            --accent-end: #2575fc;
+            --color-today: #ff4757;
+            --color-near: #ffa502;
+            --color-far: #2ed573;
+            --transition: all 0.3s ease;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--bg-body) 0%, var(--bg-body-end) 100%);
+            color: var(--text-primary); min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start; padding: 20px;
+        }
+
+        .app-wrapper {
+            width: 100%; max-width: 500px; 
+            background: var(--card-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-radius: 30px; border: 1px solid var(--card-border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden;
+            padding-bottom: 25px; position: relative; margin-top: 20px;
+        }
+
+        /* --- HEADER & DROPDOWN MENU --- */
+        .app-header { padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .header-title h1 { font-size: 20px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .header-title h1 i { color: var(--accent-end); }
+        .header-title p { font-size: 13px; color: var(--text-secondary); margin-top: 5px; }
+
+        .menu-btn {
+            background: white; border: none; width: 40px; height: 40px; border-radius: 50%;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: var(--text-primary);
+            font-size: 18px; transition: var(--transition);
+        }
+        .menu-btn:hover { background: #f0f0f0; }
+
+        .dropdown-menu {
+            position: absolute; top: 65px; right: 25px; background: white; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 200px; z-index: 100; display: none; overflow: hidden;
+        }
+        .dropdown-menu.active { display: block; }
+        .dropdown-item { padding: 12px 20px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; font-weight: 500; transition: var(--transition); }
+        .dropdown-item:hover { background: #f8f9fa; color: var(--accent-end); }
+        .dropdown-item i { width: 16px; text-align: center; }
+        .dropdown-item.danger { color: var(--color-today); }
+        .dropdown-item.danger:hover { background: #fff0f0; }
+
+        /* --- EMPTY STATE --- */
+        .empty-state { text-align: center; padding: 50px 20px; display: none; }
+        .empty-state h3 { font-size: 18px; color: var(--text-primary); margin-bottom: 10px; }
+        .empty-state p { font-size: 14px; color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%);
+            color: white; border: none; padding: 12px 25px; border-radius: 25px; font-size: 15px; font-weight: 600;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(37, 117, 252, 0.3); transition: var(--transition);
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(37, 117, 252, 0.4); }
+
+        /* --- CONTENT AREA & HERO HIGHLIGHT --- */
+        .app-content { padding: 0 25px; }
+        .hero-highlight {
+            background: linear-gradient(145deg, #ffffff 0%, rgba(255,255,255,0.4) 100%);
+            border-radius: 24px; padding: 40px 20px 30px; text-align: center;
+            box-shadow: 0 15px 35px rgba(37, 117, 252, 0.1); border: 1px solid rgba(255,255,255,0.9);
+            margin-bottom: 35px; position: relative; overflow: hidden;
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .hero-tag {
+            display: inline-block; background: var(--color-today); color: white; font-size: 11px; font-weight: 700;
+            padding: 5px 15px; border-radius: 20px; letter-spacing: 2px; margin-bottom: 15px; text-transform: uppercase;
+        }
+        .hero-icon { font-size: 65px; margin-bottom: 15px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-12px); } 100% { transform: translateY(0px); } }
+        .hero-title { font-size: 28px; font-weight: 800; color: var(--text-primary); line-height: 1.2; margin-bottom: 8px; }
+        .hero-subtitle { font-size: 15px; color: var(--accent-start); font-weight: 600; margin-bottom: 25px; }
+        .hero-days {
+            font-size: 90px; font-weight: 900; line-height: 0.9;
+            background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 2px 4px 15px rgba(37, 117, 252, 0.2); margin-bottom: 5px;
+        }
+        .hero-days-text { font-size: 16px; text-transform: uppercase; letter-spacing: 3px; color: var(--text-secondary); font-weight: 700; }
+        .hero-exact-date {
+            margin-top: 20px; font-size: 14px; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(0,0,0,0.03); padding: 8px 15px; border-radius: 12px;
+        }
+
+        /* --- DANH SÁCH SỰ KIỆN --- */
+        .list-section-title { font-size: 14px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; font-weight: 600; }
+        .event-list { list-style: none; }
+        
+        .event-item {
+            background: rgba(255, 255, 255, 0.5); border-radius: 16px; padding: 16px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            border: 1px solid rgba(255,255,255,0.6); transition: var(--transition); 
+            position: relative; overflow: hidden; /* Quan trọng để cắt bo góc của nút xóa sát viền */
+        }
+        .event-item:hover { background: rgba(255, 255, 255, 0.9); transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
+        
+        .item-main { display: flex; align-items: center; gap: 15px; }
+        .type-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 18px; flex-shrink: 0; }
+        .icon-birthday { background-color: #fff3cd; color: #f39c12; }
+        .icon-anni { background-color: #f8d7da; color: #e74c3c; }
+        .icon-memorial { background-color: #e2e3e5; color: #6c757d; }
+        .icon-holiday { background-color: #d1ecf1; color: #17a2b8; }
+        .item-titles .title { font-size: 15px; font-weight: 600; margin-bottom: 3px; padding-right: 30px; /* Tránh text đè vào nút xóa */ }
+        .item-titles .subtitle { font-size: 12px; color: var(--text-secondary); }
+        
+        .item-actions { margin-right: 2px; }
+        .compact-badge { padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; min-width: 65px; text-align: center; }
+        .status-today { background-color: #ffeaa7; color: #d63031; }
+        .status-near { background-color: #ffeaa7; color: #e17055; }
+        .status-far { background-color: #e8f8f5; color: #16a085; }
+
+        /* --- NÚT XÓA SÁT CẠNH (0 PADDING) --- */
+        .btn-delete-item {
+            position: absolute;
+            top: 0;   /* Sát mí trên */
+            right: 0; /* Sát mí phải */
+            background: rgba(255, 118, 117, 0.15); 
+            border: none; color: #ff7675; cursor: pointer;
+            width: 34px; height: 34px; 
+            border-radius: 0 0 0 12px; /* Chỉ bo tròn góc dưới cùng bên trái tạo độ mềm mại */
+            display: flex; justify-content: center; align-items: center;
+            font-size: 13px; transition: var(--transition);
+            z-index: 10;
+        }
+        .btn-delete-item:hover { background: #d63031; color: white; }
+
+        /* --- NÚT FAB FIXED GÓC DƯỚI BÊN PHẢI MÀN HÌNH --- */
+        .fab-container { 
+            position: fixed;
+            bottom: 30px; 
+            right: 30px; 
+            z-index: 1000; 
+        }
+        .fab-btn {
+            width: 55px; height: 55px; border-radius: 50%; border: none; background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%);
+            color: white; font-size: 24px; cursor: pointer; box-shadow: 0 10px 20px rgba(37, 117, 252, 0.4); transition: var(--transition);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .fab-btn:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 15px 25px rgba(37, 117, 252, 0.6); }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white; width: 90%; max-width: 400px; border-radius: 24px; padding: 30px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15); transform: translateY(20px); opacity: 0; transition: all 0.3s ease;
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); opacity: 1; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h2 { font-size: 20px; color: var(--text-primary); }
+        .btn-close { background: #f1f2f6; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: var(--text-secondary); }
+        .btn-close:hover { background: #eccc68; color: white; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 15px; border: 2px solid #f1f2f6; border-radius: 12px; font-size: 15px; outline: none; transition: var(--transition); font-family: 'Roboto', sans-serif;}
+        .form-control:focus { border-color: var(--accent-end); }
+        .btn-submit { width: 100%; background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-wrapper">
+        <div class="app-header">
+            <div class="header-title">
+                <h1><i class="fa-solid fa-layer-group"></i> RemindMe</h1>
+                <p id="current-date-display"></p>
+            </div>
+            <button class="menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            
+            <div class="dropdown-menu" id="dropdownMenu">
+                <div class="dropdown-item" onclick="loadDefaultData()"><i class="fa-solid fa-download"></i> Tải dữ liệu mẫu</div>
+                <div class="dropdown-item danger" onclick="clearAllData()"><i class="fa-solid fa-trash-can"></i> Xóa tất cả dữ liệu</div>
+            </div>
+        </div>
+        
+        <div class="empty-state" id="empty-state">
+            <i class="fa-solid fa-box-open" style="font-size: 60px; color: #bdc3c7; margin-bottom: 20px;"></i>
+            <h3>Chưa có sự kiện nào</h3>
+            <p>Hãy thêm sự kiện mới hoặc tải dữ liệu mẫu có sẵn để bắt đầu nhé!</p>
+            <button class="btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i> Thêm Sự Kiện</button>
+        </div>
+
+        <div class="app-content" id="main-content">
+            <div id="highlight-area"></div>
+            <h3 class="list-section-title"><span>Tất cả sự kiện quản lý</span></h3>
+            <ul class="event-list" id="events-container"></ul>
+        </div>
+    </div>
+
+    <div class="fab-container" id="fab-container">
+        <button class="fab-btn" onclick="openModal()"><i class="fa-solid fa-plus"></i></button>
+    </div>
+
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Thêm Sự Kiện Mới</h2>
+                <button class="btn-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="addForm" onsubmit="handleAddEvent(event)">
+                <div class="form-group">
+                    <label>Tên sự kiện</label>
+                    <input type="text" class="form-control" id="eventName" required>
+                </div>
+                <div class="form-group">
+                    <label>Ngày diễn ra (hoặc ngày bắt đầu)</label>
+                    <input type="date" class="form-control" id="eventDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Loại sự kiện</label>
+                    <select class="form-control" id="eventType">
+                        <option value="Birthday">Sinh nhật</option>
+                        <option value="Anni">Kỷ niệm</option>
+                        <option value="Memorial">Ngày giỗ</option>
+                        <option value="Holiday">Lễ / Sự kiện khác</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit">Lưu Sự Kiện</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const myDefaultData = [
+            { id: 101, name: "Kỷ niệm ngày cưới", date: "2018-04-25", type: "Anni" },
+            { id: 102, name: "Sinh nhật Vợ yêu", date: "1995-12-10", type: "Birthday" },
+            { id: 103, name: "Giỗ Ông Nội", date: "1990-08-15", type: "Memorial" },
+            { id: 104, name: "Quốc khánh VN", date: "1945-09-02", type: "Holiday" },
+            { id: 105, name: "Sinh nhật của tôi", date: "1994-10-28", type: "Birthday" }
+        ];
+
+        const typeMap = {
+            'Birthday': { icon: 'fa-cake-candles', color: '#ff9a9e', class: 'icon-birthday' },
+            'Anni': { icon: 'fa-champagne-glasses', color: '#fab1a0', class: 'icon-anni' },
+            'Memorial': { icon: 'fa-leaf', color: '#b2bec3', class: 'icon-memorial' },
+            'Holiday': { icon: 'fa-star', color: '#81ecec', class: 'icon-holiday' }
+        };
+
+        function getEvents() { return JSON.parse(localStorage.getItem('remindme_events')) || []; }
+        function saveEvents(events) { localStorage.setItem('remindme_events', JSON.stringify(events)); renderUI(); }
+
+        function toggleMenu() { document.getElementById('dropdownMenu').classList.toggle('active'); }
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.menu-btn') && !e.target.closest('.dropdown-menu')) {
+                document.getElementById('dropdownMenu').classList.remove('active');
+            }
+        });
+
+        function loadDefaultData() { saveEvents(myDefaultData); document.getElementById('dropdownMenu').classList.remove('active'); }
+        function clearAllData() { if(confirm('Xóa toàn bộ dữ liệu?')) { saveEvents([]); document.getElementById('dropdownMenu').classList.remove('active'); } }
+
+        function openModal() { document.getElementById('addModal').classList.add('active'); }
+        function closeModal() { document.getElementById('addModal').classList.remove('active'); document.getElementById('addForm').reset(); }
+
+        function handleAddEvent(e) {
+            e.preventDefault();
+            const events = getEvents();
+            events.push({
+                id: Date.now(),
+                name: document.getElementById('eventName').value,
+                date: document.getElementById('eventDate').value,
+                type: document.getElementById('eventType').value
+            });
+            saveEvents(events);
+            closeModal();
+        }
+
+        function deleteEvent(id) {
+            if(confirm('Bạn có chắc chắn muốn xóa sự kiện này?')) {
+                saveEvents(getEvents().filter(ev => ev.id !== id));
+            }
+        }
+
+        const formatDateVN = (dateObj) => `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+
+        function processEvents(rawEvents) {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            rawEvents.forEach(event => {
+                const eventDate = new Date(event.date);
+                let yearToCalculate = eventDate.getFullYear() === 0 ? today.getFullYear() : today.getFullYear();
+                let nextOccurrence = new Date(yearToCalculate, eventDate.getMonth(), eventDate.getDate());
+                if (nextOccurrence < today) nextOccurrence.setFullYear(today.getFullYear() + 1);
+                
+                event.daysRemaining = Math.ceil((nextOccurrence - today) / (1000 * 60 * 60 * 24));
+                event.yearsCount = eventDate.getFullYear() > 0 ? nextOccurrence.getFullYear() - eventDate.getFullYear() : 0;
+                event.nextDate = nextOccurrence;
+            });
+            return rawEvents.sort((a, b) => a.daysRemaining - b.daysRemaining);
+        }
+
+        function renderUI() {
+            const now = new Date();
+            document.getElementById('current-date-display').innerText = now.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            
+            const rawEvents = getEvents();
+            if (rawEvents.length === 0) {
+                document.getElementById('main-content').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'block';
+                return;
+            }
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('empty-state').style.display = 'none';
+
+            const sortedEvents = processEvents(rawEvents);
+            const closest = sortedEvents[0];
+            const typeInfo = typeMap[closest.type] || { icon: 'fa-calendar', color: '#ccc' };
+            const subtitleText = closest.yearsCount > 0 ? `Kỷ niệm lần thứ ${closest.yearsCount}` : 'Sự kiện định kỳ';
+            
+            let highlightDaysHTML = closest.daysRemaining === 0 
+                ? `<div class="hero-days" style="font-size: 60px; color: var(--color-today); -webkit-text-fill-color: var(--color-today);">HÔM NAY!</div>`
+                : `<div class="hero-days">${closest.daysRemaining}</div><div class="hero-days-text">Ngày Nữa</div>`;
+
+            // RENDER HERO
+            document.getElementById('highlight-area').innerHTML = `
+                <div class="hero-highlight">
+                    <div class="hero-content">
+                        <div class="hero-tag">Sắp diễn ra</div>
+                        <div class="hero-icon" style="color: ${typeInfo.color}; text-shadow: 0 10px 20px ${typeInfo.color}66;"><i class="fa-solid ${typeInfo.icon}"></i></div>
+                        <h2 class="hero-title">${closest.name}</h2>
+                        <div class="hero-subtitle">${subtitleText}</div>
+                        ${highlightDaysHTML}
+                        <div class="hero-exact-date"><i class="fa-regular fa-calendar-check"></i> ${formatDateVN(closest.nextDate)}</div>
+                    </div>
+                </div>
+            `;
+
+            // RENDER LIST
+            const listContainer = document.getElementById('events-container');
+            listContainer.innerHTML = '';
+            
+            sortedEvents.forEach(event => {
+                const itemType = typeMap[event.type] || { icon: 'fa-calendar', class: 'icon-holiday' };
+                let statusClass = event.daysRemaining === 0 ? 'status-today' : (event.daysRemaining <= 7 ? 'status-near' : 'status-far');
+                const subtitle = event.yearsCount > 0 ? `Kỷ niệm ${event.yearsCount} năm` : 'Định kỳ';
+                const dayText = event.daysRemaining === 0 ? 'Hôm nay' : `${event.daysRemaining} ngày`;
+
+                listContainer.innerHTML += `
+                    <li class="event-item">
+                        <button class="btn-delete-item" onclick="deleteEvent(${event.id})" title="Xóa"><i class="fa-solid fa-trash-can"></i></button>
+                        
+                        <div class="item-main">
+                            <div class="type-icon ${itemType.class}"><i class="fa-solid ${itemType.icon}"></i></div>
+                            <div class="item-titles">
+                                <div class="title">${event.name}</div>
+                                <div class="subtitle">${subtitle} • ${event.nextDate.getDate()}/${event.nextDate.getMonth()+1}</div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <div class="compact-badge ${statusClass}">${dayText}</div>
+                        </div>
+                    </li>
+                `;
+            });
+        }
+
+        renderUI();
+    </script>
+</body>
+</html>
